@@ -20,20 +20,20 @@ var (
 )
 
 func main() {
-	capture()
-	recognizeFile(filePath)
+	Capture()
+	RecognizeFile(filePath)
 
 }
 
-// capture opens the webcam and captures a frame
-func capture() {
+// Capture opens the webcam and captures a frame
+func Capture() {
 	sig := make(chan bool)
 	go func(deviceID string, saveFile string, sig chan bool) {
 		fmt.Println("openning device: ", device)
 
 		webcam, err := gocv.OpenVideoCapture(device)
 		if err != nil {
-			fmt.Printf("Error opening video capture device: %v\n", device)
+			fmt.Printf("Error opening video Capture device: %v\n", device)
 			return
 		}
 		time.Sleep(time.Second * 3)
@@ -55,7 +55,6 @@ func capture() {
 		}
 		fmt.Printf("Saving image\n")
 		// save image to file ex.jpeg in current directory
-		gocv.IMEncode(".png", img)
 		gocv.IMWrite(filePath, img)
 		fmt.Printf("\nFinished\n")
 
@@ -65,8 +64,8 @@ func capture() {
 	<-sig
 }
 
-// recognizeFile recognize qr code from file
-func recognizeFile(path string) {
+// RecognizeFile recognize qr code from file
+func RecognizeFile(path string) {
 	fmt.Printf("recognize file: %v\n", path)
 	imgdata, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -87,6 +86,5 @@ func recognizeFile(path string) {
 	for _, qrCode := range qrCodes {
 		fmt.Printf("QRcode payload: %s\n", qrCode.Payload)
 	}
-
 	return
 }
