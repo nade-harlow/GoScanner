@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/liyue201/goqr"
 	"gocv.io/x/gocv"
@@ -20,21 +21,25 @@ var (
 )
 
 func main() {
-	Capture()
-	RecognizeFile(filePath)
+	err := Capture()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	//RecognizeFile(filePath)
 
 }
 
 // Capture opens the webcam and captures a frame
-func Capture() {
-	sig := make(chan bool)
-	go func(deviceID string, saveFile string, sig chan bool) {
+func Capture() error {
+	errChan := make(chan error)
+	go func(deviceID string, saveFile string, errChan chan error) {
 		fmt.Println("openning device: ", device)
 
 		webcam, err := gocv.OpenVideoCapture(device)
 		if err != nil {
 			fmt.Printf("Error opening video Capture device: %v\n", device)
-			return
+			errChan <- errors.New(fmt.Sprintf("Error opening video Capture device: %v\n", device))
 		}
 		time.Sleep(time.Second * 3)
 		fmt.Printf("start reading device: %v\n", device)
@@ -48,43 +53,44 @@ func Capture() {
 		// read image from webcam into img matrix. ok = true if read successful and false if not
 		if ok := webcam.Read(&img); !ok {
 			fmt.Printf("Error reading from device %v\n", device)
-			return
+			errChan <- errors.New(fmt.Sprintf("Error reading from device %v\n", device))
 		}
 		if img.Empty() { // if img is empty, then webcam is not working
 			fmt.Printf("no image on device %v\n", device)
+			errChan <- errors.New(fmt.Sprintf("no image on device %v\n", device))
 		}
 		fmt.Printf("Saving image\n")
+
 		// save image to file ex.jpeg in current directory
 		gocv.IMWrite(filePath, img)
 		fmt.Printf("\nFinished\n")
 
-		sig <- true
-	}(device, fileName, sig)
+		errChan <- nil
+	}(device, fileName, errChan)
 
-	<-sig
+	return <-errChan
 }
 
 // RecognizeFile recognize qr code from file
-func RecognizeFile(path string) {
+func RecognizeFile(path string) error {
 	fmt.Printf("recognize file: %v\n", path)
 	imgdata, err := ioutil.ReadFile(path)
 	if err != nil {
-		fmt.Printf("%v\n", err)
-		return
+		return err
 	}
 	//go os.Remove(path)
 	img, _, err := image.Decode(bytes.NewReader(imgdata))
 	if err != nil {
 		fmt.Printf("image.Decode error: %v\n", err)
-		return
+		return err
 	}
 	qrCodes, err := goqr.Recognize(img)
 	if err != nil {
 		fmt.Printf("Recognize failed: %v\n", err)
-		return
+		return err
 	}
 	for _, qrCode := range qrCodes {
 		fmt.Printf("QRcode payload: %s\n", qrCode.Payload)
 	}
-	return
+	return nil
 }
