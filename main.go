@@ -1,9 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/nade-harlow/QRcode-scanner/scan"
+)
 
 func main() {
-	err := Capture()
+	err := scan.Capture()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
