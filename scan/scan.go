@@ -25,7 +25,7 @@ var (
 func Capture() error {
 	errChan := make(chan error)
 	go func(deviceID string, saveFile string, errChan chan error) {
-		fmt.Println("openning device: ", device)
+		fmt.Println("opening device: ", device)
 
 		webcam, err := gocv.OpenVideoCapture(device)
 		if err != nil {
